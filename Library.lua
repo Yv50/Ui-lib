@@ -1339,80 +1339,85 @@ local BaseGroupbox = {};
 do
     local Funcs = {};
 
-    function Funcs:AddBlank(Size)
-        local Groupbox = self;
-        local Container = Groupbox.Container;
+function Funcs:AddBlank(Size)
+    local Groupbox = self;
+    local Container = Groupbox.Container;
 
-        Library:Create('Frame', {
-            BackgroundTransparency = 1;
-            Size = UDim2.new(1, 0, 0, Size);
-            ZIndex = 1;
-            Parent = Container;
-        });
-    end;
+    local BlankFrame = Library:Create('Frame', {
+        BackgroundTransparency = 1;
+        Size = UDim2.new(1, 0, 0, Size);
+        ZIndex = 1;
+        Parent = Container;
+    });
 
-    function Funcs:AddLabel(Text, DoesWrap)
-        local Label = {};
+    return BlankFrame
+end
 
-        local Groupbox = self;
-        local Container = Groupbox.Container;
+function Funcs:AddLabel(Text, DoesWrap)
+    local Label = {}
 
-        local TextLabel = Library:CreateLabel({
-            Size = UDim2.new(1, -4, 0, 15);
-            TextSize = 14;
-            Text = Text;
-            TextWrapped = DoesWrap or false,
-            TextXAlignment = Enum.TextXAlignment.Left;
-            ZIndex = 5;
-            AutoLocalize = false;
-            Parent = Container;
-        });
-    
+    local Groupbox = self
+    local Container = Groupbox.Container
+
+    local TextLabel = Library:CreateLabel({
+        Size = UDim2.new(1, -4, 0, 15);
+        TextSize = 14;
+        Text = Text;
+        TextWrapped = DoesWrap or false,
+        TextXAlignment = Enum.TextXAlignment.Left;
+        ZIndex = 5;
+        AutoLocalize = false;
+        Parent = Container;
+    })
+
+    if DoesWrap then
+        local Y = select(2, Library:GetTextBounds(Text, Library.Font, 14, Vector2.new(TextLabel.AbsoluteSize.X, math.huge)))
+        TextLabel.Size = UDim2.new(1, -4, 0, Y)
+    else
+        Library:Create('UIListLayout', {
+            Padding = UDim.new(0, 4);
+            FillDirection = Enum.FillDirection.Horizontal;
+            HorizontalAlignment = Enum.HorizontalAlignment.Right;
+            SortOrder = Enum.SortOrder.LayoutOrder;
+            Parent = TextLabel;
+        })
+    end
+
+    Label.TextLabel = TextLabel
+    Label.Container = Container
+
+    function Label:SetText(Text)
+        TextLabel.Text = Text
+
         if DoesWrap then
             local Y = select(2, Library:GetTextBounds(Text, Library.Font, 14, Vector2.new(TextLabel.AbsoluteSize.X, math.huge)))
             TextLabel.Size = UDim2.new(1, -4, 0, Y)
-        else
-            Library:Create('UIListLayout', {
-                Padding = UDim.new(0, 4);
-                FillDirection = Enum.FillDirection.Horizontal;
-                HorizontalAlignment = Enum.HorizontalAlignment.Right;
-                SortOrder = Enum.SortOrder.LayoutOrder;
-                Parent = TextLabel;
-            });
         end
 
-        Label.TextLabel = TextLabel;
-        Label.Container = Container;
-    
-        function Label:SetText(Text)
-            TextLabel.Text = Text
-    
-            if DoesWrap then
-                local Y = select(2, Library:GetTextBounds(Text, Library.Font, 14, Vector2.new(TextLabel.AbsoluteSize.X, math.huge)))
-                TextLabel.Size = UDim2.new(1, -4, 0, Y)
-            end
+        Groupbox:Resize()
+    end
 
-            Groupbox:Resize();
-        end
-        local blank = Groupbox:AddBlank(5);
-        function Label:Destroy()
-            TextLabel:Destroy();
-            blank:Destroy();
-            Groupbox:Resize();
-        end;
+    local blank = Groupbox:AddBlank(5)
 
-        function Label:SetColor(color)
-            TextLabel.TextColor3 = color;
-        end;
-    
-        if (not DoesWrap) then
-            setmetatable(Label, BaseAddons);
-        end
-    
-        Groupbox:Resize();
-    
-        return Label;
-    end;
+    function Label:Destroy()
+        TextLabel:Destroy()
+        if blank then blank:Destroy() end
+        Groupbox:Resize()
+    end
+
+    function Label:SetColor(color)
+        TextLabel.TextColor3 = color
+    end
+
+    if not DoesWrap then
+        setmetatable(Label, BaseAddons)
+    end
+
+    Groupbox:Resize()
+
+    return Label
+end
+
 
     function Funcs:AddButton(...)
         -- TODO: Eventually redo this
